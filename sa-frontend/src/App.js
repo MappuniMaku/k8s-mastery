@@ -20,7 +20,7 @@ class App extends Component {
     };
 
     analyzeSentence() {
-        fetch(process.env.BACKEND_URL, {
+        fetch(`${process.env.REACT_APP_BACKEND_URL}/sentiment`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
