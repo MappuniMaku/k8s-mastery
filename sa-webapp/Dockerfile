@@ -1,6 +1,31 @@
+# Stage 1: Build
+FROM maven:3.8.6-jdk-8 AS builder
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the pom.xml and install dependencies first (this uses Docker's caching layer)
+COPY pom.xml ./
+RUN mvn dependency:go-offline
+
+# Now copy the rest of your source code
+COPY src ./src
+
+# Run mvn install
+RUN mvn install
+
+# Stage 2: Run
 FROM openjdk:8-jdk-alpine
-# Environment Variable that defines the endpoint of sentiment-analysis python api.
-ENV SA_LOGIC_API_URL http://localhost:5000
-ADD target/sentiment-analysis-web-0.0.1-SNAPSHOT.jar /
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the built artifacts from the builder stage
+COPY --from=builder /app/target/*.jar ./app.jar
+
+# Should use container ip instead of this
+# ENV SA_LOGIC_API_URL http://localhost:5000
 EXPOSE 8080
-CMD ["java", "-jar", "sentiment-analysis-web-0.0.1-SNAPSHOT.jar", "--sa.logic.api.url=${SA_LOGIC_API_URL}"]
+
+# Command to run your application
+ENTRYPOINT ["java", "-jar", "app.jar"]
